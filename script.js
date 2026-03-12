@@ -54,39 +54,26 @@ const generateImages = async (imageCount, promptText) => {
     submitBtn.disabled = true;
     submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Generating...`;
 
-    // सभी इमेज के लिए रिक्वेस्ट भेजें
-    const requests = Array.from({ length: imageCount }, async (_, i) => {
-        try {
-            const formData = new FormData();
-            formData.append("prompt", promptText);
+    try {
+        const response = await fetch(`/api/generate?prompt=${encodeURIComponent(promptText)}&count=${imageCount}`);
+        const data = await response.json();
 
-            const response = await fetch("https://clipdrop-api.co/text-to-image/v1", {
-                method: "POST",
-                headers: { "x-api-key": API_KEY },
-                body: formData
+        if (data.error) {
+            console.error("Error:", data.error);
+            gridGallery.innerHTML = `<p style="color:red; text-align:center;">Failed: ${data.error}</p>`;
+        } else {
+            // clear gallery
+            gridGallery.innerHTML = "";
+            data.urls.forEach((url, i) => {
+                updateImageCard(i, url);
             });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `Error ${response.status}`);
-            }
-
-            const buffer = await response.arrayBuffer();
-            const blob = new Blob([buffer], { type: "image/png" });
-            const url = URL.createObjectURL(blob);
-            updateImageCard(i, url);
-
-        } catch (err) {
-            console.error("Error:", err.message);
-            const card = document.getElementById(`img-card-${i}`);
-            if (card) {
-                card.classList.remove("loading");
-                card.innerHTML = `<p style="color:red; font-size:12px; padding:10px; text-align:center;">Failed: ${err.message}</p>`;
-            }
         }
-    });
 
-    await Promise.allSettled(requests);
+    } catch (err) {
+        console.error(err);
+        gridGallery.innerHTML = `<p style="color:red; text-align:center;">Something went wrong.</p>`;
+    }
+
     submitBtn.disabled = false;
     submitBtn.innerHTML = `<i class="fa-solid fa-wand-sparkles"></i> Generate`;
 };
