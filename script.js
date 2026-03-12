@@ -6,8 +6,6 @@ const submitBtn = document.querySelector(".generate-btn");
 const countSelect = document.getElementById("count-select");
 const gridGallery = document.querySelector(".gallery-grid");
 
-// अपनी API Key यहाँ डालें
-const API_KEY = "ef4e7f96c184600127fe0c7ca14d692cb3e32de44ea7b303e1aa21feaa052571a97a231d18812fdd5e4f1686f5cb97a5"; 
 
 let generatedUrls = [];
 
