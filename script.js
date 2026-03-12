@@ -7,6 +7,7 @@ const countSelect = document.getElementById("count-select");
 const gridGallery = document.querySelector(".gallery-grid");
 
 
+
 let generatedUrls = [];
 
 // ==== Random Prompts ====
