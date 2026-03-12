@@ -6,8 +6,6 @@ const submitBtn = document.querySelector(".generate-btn");
 const countSelect = document.getElementById("count-select");
 const gridGallery = document.querySelector(".gallery-grid");
 
-
-
 let generatedUrls = [];
 
 // ==== Random Prompts ====
@@ -56,22 +54,21 @@ const generateImages = async (imageCount, promptText) => {
 
     try {
         const response = await fetch(`/api/generate?prompt=${encodeURIComponent(promptText)}&count=${imageCount}`);
-        const data = await response.json();
-
-        if (data.error) {
-            console.error("Error:", data.error);
-            gridGallery.innerHTML = `<p style="color:red; text-align:center;">Failed: ${data.error}</p>`;
-        } else {
-            // clear gallery
-            gridGallery.innerHTML = "";
-            data.urls.forEach((url, i) => {
-                updateImageCard(i, url);
-            });
+        let data;
+        try {
+            data = await response.json();
+        } catch {
+            throw new Error(`Server returned non-JSON response`);
         }
+
+        if (data.error) throw new Error(data.error);
+
+        gridGallery.innerHTML = "";
+        data.urls.forEach((url, i) => updateImageCard(i, url));
 
     } catch (err) {
         console.error(err);
-        gridGallery.innerHTML = `<p style="color:red; text-align:center;">Something went wrong.</p>`;
+        gridGallery.innerHTML = `<p style="color:red; text-align:center;">${err.message}</p>`;
     }
 
     submitBtn.disabled = false;
@@ -84,17 +81,16 @@ promptForm.addEventListener("submit", (e) => {
     const text = promptInput.value.trim();
     if (!text) return;
 
-    // पुरानी इमेजेस की मेमोरी साफ़ करें
+    // Clear old images
     generatedUrls.forEach(url => URL.revokeObjectURL(url));
     generatedUrls = [];
     gridGallery.innerHTML = "";
 
-    const count = parseInt(countSelect.value);
-    
-    // हमने ratio-select को हटाकर डिफ़ॉल्ट "1/1" कर दिया है
-    const defaultRatio = "1/1"; 
+    let count = parseInt(countSelect.value);
+    if (isNaN(count) || count < 1) count = 1;
 
-    // गैलरी में लोडिंग कार्ड्स जोड़ें
+    const defaultRatio = "1/1";
+
     for (let i = 0; i < count; i++) {
         gridGallery.innerHTML += `
             <div class="img-card loading" id="img-card-${i}" style="aspect-ratio: ${defaultRatio}">
@@ -103,6 +99,5 @@ promptForm.addEventListener("submit", (e) => {
         `;
     }
 
-    // इमेज जनरेट करना शुरू करें
     generateImages(count, text);
 });
