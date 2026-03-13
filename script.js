@@ -54,25 +54,27 @@ const generateImages = async (imageCount, promptText) => {
 
     try {
         const response = await fetch(`/api/generate?prompt=${encodeURIComponent(promptText)}&count=${imageCount}`);
-        let data;
-        try {
-            data = await response.json();
-        } catch {
-            throw new Error(`Server returned non-JSON response`);
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+            throw new Error(data.error || "Failed to generate");
         }
 
-        if (data.error) throw new Error(data.error);
-
         gridGallery.innerHTML = "";
-        data.urls.forEach((url, i) => updateImageCard(i, url));
+        // data.urls now contains the Base64 strings
+        data.urls.forEach((url, i) => {
+            // Re-create the card structure before updating
+            gridGallery.innerHTML += `<div class="img-card loading" id="img-card-${i}"></div>`;
+            updateImageCard(i, url);
+        });
 
     } catch (err) {
         console.error(err);
         gridGallery.innerHTML = `<p style="color:red; text-align:center;">${err.message}</p>`;
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="fa-solid fa-wand-sparkles"></i> Generate`;
     }
-
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = `<i class="fa-solid fa-wand-sparkles"></i> Generate`;
 };
 
 // ==== Form Event ====

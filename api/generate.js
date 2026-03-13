@@ -31,10 +31,14 @@ export default async function handler(req, res) {
         throw new Error(errorMessage);
       }
 
+      // ... inside your try block for-loop
       const buffer = await response.arrayBuffer();
-      const blob = new Blob([buffer], { type: "image/png" });
-      const url = URL.createObjectURL(blob);
-      results.push(url);
+      // Convert the buffer to a Base64 string
+      const base64Image = Buffer.from(buffer).toString('base64');
+      // Create a Data URL that the browser understands
+      const dataUrl = `data:image/png;base64,${base64Image}`;
+      results.push(dataUrl);
+      // ...
     }
 
     res.status(200).json({ urls: results });
